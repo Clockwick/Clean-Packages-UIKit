@@ -21,6 +21,7 @@ public struct LabelRadioItem: Identifiable, Equatable, Sendable {
 
 public class LabelRadioTableViewCell: UITableViewCell {
   var disposeBag = DisposeBag()
+  var itemId: String?
   // MARK: - UI
   let labelRadio = LabelRadio()
   
@@ -39,6 +40,7 @@ public class LabelRadioTableViewCell: UITableViewCell {
   override public func prepareForReuse() {
     super.prepareForReuse()
     disposeBag = DisposeBag()
+    itemId = nil
   }
   
   private func setupView() {
@@ -53,6 +55,7 @@ public class LabelRadioTableViewCell: UITableViewCell {
   
   // MARK: - Configuration
   public func configure(with item: LabelRadioItem) {
+    itemId = item.id
     labelRadio.text = item.text
     labelRadio.isSelected = item.isSelected
   }

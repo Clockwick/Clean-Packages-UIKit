@@ -60,11 +60,13 @@ public class LabelRadioTableView: UIView {
   }
   
   
-  private func updateItem(at index: Int, transform: (inout LabelRadioItem) -> Void) {
+  private func updateItemById(_ id: String, transform: (inout LabelRadioItem) -> Void) {
     var items = itemsRelay.value
-    guard items.indices.contains(index) else { return }
+    guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+    
     let oldItem = items[index]
     transform(&items[index])
+    
     if items[index] != oldItem {
       itemsRelay.accept(items)
       editingCompletedRelay.accept(items)
@@ -86,17 +88,26 @@ extension LabelRadioTableView: UITableViewDataSource {
     let item = itemsRelay.value[indexPath.row]
     cell.configure(with: item)
     
+    // Store the item ID for reference
+    cell.itemId = item.id
+    
     cell.rx.textEditCompleted
       .subscribe(onNext: { [weak self, weak cell] _ in
         guard let self = self,
-              let cell = cell else { return }
-        self.updateItem(at: indexPath.row) { $0.text = cell.labelRadio.text }
+              let cell = cell,
+              let itemId = cell.itemId else { return }
+        
+        self.updateItemById(itemId) { $0.text = cell.labelRadio.text }
       })
       .disposed(by: cell.disposeBag)
     
     cell.rx.selectionChanged
-      .subscribe(onNext: { [weak self] isSelected in
-        self?.updateItem(at: indexPath.row) { $0.isSelected = isSelected }
+      .subscribe(onNext: { [weak self, weak cell] isSelected in
+        guard let self = self,
+              let cell = cell,
+              let itemId = cell.itemId else { return }
+        
+        self.updateItemById(itemId) { $0.isSelected = isSelected }
       })
       .disposed(by: cell.disposeBag)
     
