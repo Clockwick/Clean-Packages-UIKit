@@ -17,13 +17,6 @@ open class BaseViewController<VM: ViewModelType>: UIViewController {
   
   public var viewModel: VM
   
-  
-  // MARK: - Modal Properties
-  private var modalViewController: UIViewController?
-  private let modalView = BaseModalView()
-  private let modalPrimaryAction = PublishRelay<Void>()
-  private let modalSecondaryAction = PublishRelay<Void>()
-  
   public let disposeBag = DisposeBag()
   
   public init(viewModel: VM) {
@@ -36,57 +29,64 @@ open class BaseViewController<VM: ViewModelType>: UIViewController {
     fatalError("init(coder:) has not been implemented")
   }
   
-  public let loadingView = UIView().apply {
-    $0.isHidden = true
-    $0.backgroundColor = .systemBackground
-    $0.layer.zPosition = 1
-  }
-  
-  public let activityIndicatorView = UIActivityIndicatorView().apply {
-    $0.color = .label
-    $0.layer.zPosition = 1
-  }
-  
   override open func viewDidLoad() {
     super.viewDidLoad()
     setupView()
-    setupAction()
   }
   
   private func setupView() {
     view.backgroundColor = .systemBackground
-    view.addSubview(loadingView)
-    view.bringSubviewToFront(loadingView)
-    loadingView.snp.makeConstraints {
-      $0.edges.equalToSuperview()
-    }
-    loadingView.addSubview(activityIndicatorView)
-    activityIndicatorView.snp.makeConstraints {
-      $0.center.equalToSuperview()
-      $0.width.height.equalTo(40)
-    }
   }
-  
-  private func setupAction() {
-    setupModalActions()
-  }
-  
-  // MARK: - Modal Methods
-  private func setupModalActions() {
-    modalView.primaryButton.rx.tap
-      .bind(to: modalPrimaryAction)
-      .disposed(by: disposeBag)
-    
-    modalView.secondaryButton.rx.tap
-      .bind(to: modalSecondaryAction)
-      .disposed(by: disposeBag)
-  }
-  
+
   deinit {
     print(
       "###",
       "DEBUG:",
       "DEINIT \(self.description)"
     )
+  }
+}
+
+// MARK: - Modal Presentation
+public extension BaseViewController {
+  func showModal(
+    title: String,
+    description: String,
+    primaryTitle: String = "Confirm",
+    secondaryTitle: String = "Cancel",
+    primaryAction: @escaping () -> Void,
+    secondaryAction: @escaping () -> Void
+  ) {
+    let modalVC = BaseModalViewController()
+    modalVC.mainView.rx.state.onNext(
+      .init(
+        title: title,
+        description: description,
+        primaryTitle: primaryTitle,
+        secondaryTitle: secondaryTitle
+      )
+    )
+    
+    modalVC.mainView.rx.actions.subscribe(onNext: { [weak modalVC]  action in
+      switch action {
+      case .didTapPrimaryButton:
+        modalVC?.animateOut {
+          modalVC?.dismiss(animated: false) {
+            primaryAction()
+          }
+        }
+      case .didTapSecondaryButton:
+        modalVC?.animateOut {
+          modalVC?.dismiss(animated: false) {
+            secondaryAction()
+          }
+        }
+      }
+    })
+    .disposed(by: disposeBag)
+    
+    present(modalVC, animated: false) { [weak modalVC] in
+      modalVC?.animateIn()
+    }
   }
 }

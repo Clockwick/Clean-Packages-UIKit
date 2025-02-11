@@ -3,13 +3,11 @@ import RxSwift
 import RxCocoa
 
 public class BaseModalViewController: UIViewController {
-  // MARK: - Properties
-  private let mainView = BaseModalView()
-  private let disposeBag = DisposeBag()
+  // MARK: - Main View
+  public let mainView = BaseModalView()
   
-  // MARK: - Reactive Properties
-  let primaryAction = PublishRelay<Void>()
-  let secondaryAction = PublishRelay<Void>()
+  // MARK: - Properties
+  private let disposeBag = DisposeBag()
   
   // MARK: - Init
   public init() {
@@ -29,32 +27,10 @@ public class BaseModalViewController: UIViewController {
   
   public override func viewDidLoad() {
     super.viewDidLoad()
-    setupBindings()
-  }
-  
-  // MARK: - Setup
-  private func setupBindings() {
-    mainView.primaryButton.rx.tap
-      .bind(to: primaryAction)
-      .disposed(by: disposeBag)
-    
-    mainView.secondaryButton.rx.tap
-      .bind(to: secondaryAction)
-      .disposed(by: disposeBag)
-  }
-  
-  // MARK: - Public Methods
-  func configure(title: String, description: String, primaryTitle: String, secondaryTitle: String) {
-    mainView.configure(
-      title: title,
-      description: description,
-      primaryTitle: primaryTitle,
-      secondaryTitle: secondaryTitle
-    )
   }
   
   // MARK: - Animations
-  func animateIn() {
+  public func animateIn() {
     // Initial state
     view.alpha = 0
     mainView.containerView.transform = CGAffineTransform(translationX: 0, y: mainView.containerView.frame.height)
@@ -81,7 +57,7 @@ public class BaseModalViewController: UIViewController {
     }
   }
   
-  func animateOut(completion: @escaping () -> Void) {
+  public func animateOut(completion: @escaping () -> Void) {
     // Spring animation for container
     UIView.animate(
       withDuration: 0.5,
@@ -105,48 +81,12 @@ public class BaseModalViewController: UIViewController {
       completion()
     }
   }
-}
-
-extension BaseViewController {
-  // MARK: - Modal Presentation
-  public func showModal(
-    title: String,
-    description: String,
-    primaryTitle: String = "Confirm",
-    secondaryTitle: String = "Cancel",
-    primaryAction: @escaping () -> Void,
-    secondaryAction: @escaping () -> Void
-  ) {
-    let modalVC = BaseModalViewController()
-    modalVC.configure(
-      title: title,
-      description: description,
-      primaryTitle: primaryTitle,
-      secondaryTitle: secondaryTitle
+  
+  deinit {
+    print(
+      "###",
+      "DEBUG:",
+      "DEINIT MODAL: \(self.description)"
     )
-    
-    modalVC.primaryAction
-      .subscribe(onNext: { [weak modalVC] in
-        modalVC?.animateOut {
-          modalVC?.dismiss(animated: false) {
-            primaryAction()
-          }
-        }
-      })
-      .disposed(by: disposeBag)
-    
-    modalVC.secondaryAction
-      .subscribe(onNext: { [weak modalVC] in
-        modalVC?.animateOut {
-          modalVC?.dismiss(animated: false) {
-            secondaryAction()
-          }
-        }
-      })
-      .disposed(by: disposeBag)
-    
-    present(modalVC, animated: false) { [weak modalVC] in
-      modalVC?.animateIn()
-    }
   }
 }

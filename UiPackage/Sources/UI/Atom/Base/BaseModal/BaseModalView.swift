@@ -4,7 +4,24 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
-class BaseModalView: UIView {
+public class BaseModalView: UIView {
+  // MARK: - Properties
+  public var state: ModalState = .empty {
+    didSet {
+        guard oldValue != state else { return }
+        updateUI(state: state)
+    }
+  }
+  
+  // MARK: - Update UI
+  @MainActor
+  private func updateUI(state: ModalState) {
+      titleLabel.text = state.title
+      descriptionLabel.text = state.description
+      primaryButton.setTitle(state.primaryTitle, for: .normal)
+      secondaryButton.setTitle(state.secondaryTitle, for: .normal)
+  }
+  
   // MARK: - UI Components
   public let containerView = UIView()
   
@@ -28,14 +45,14 @@ class BaseModalView: UIView {
     $0.distribution = .fillEqually
   }
   
-  let primaryButton = UIButton(type: .system).apply {
+  fileprivate let primaryButton = UIButton(type: .system).apply {
     $0.backgroundColor = .systemBlue
     $0.setTitleColor(.white, for: .normal)
     $0.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
     $0.layer.cornerRadius = 8
   }
   
-  let secondaryButton = UIButton(type: .system).apply {
+  fileprivate let secondaryButton = UIButton(type: .system).apply {
     $0.backgroundColor = .systemGray6
     $0.setTitleColor(.label, for: .normal)
     $0.titleLabel?.font = .systemFont(ofSize: 16, weight: .regular)
@@ -124,12 +141,45 @@ class BaseModalView: UIView {
       secondaryButton.sendActions(for: .touchUpInside)
     }
   }
-  
-  // MARK: - Public Methods
-  func configure(title: String, description: String, primaryTitle: String, secondaryTitle: String) {
-    titleLabel.text = title
-    descriptionLabel.text = description
-    primaryButton.setTitle(primaryTitle, for: .normal)
-    secondaryButton.setTitle(secondaryTitle, for: .normal)
+}
+
+public extension Reactive where Base: BaseModalView {
+  var actions: Observable<ModalAction> {
+    Observable.merge(
+      base.primaryButton.rx.tap.map { .didTapPrimaryButton },
+      base.secondaryButton.rx.tap.map { .didTapSecondaryButton }
+    )
   }
+  
+  @MainActor
+  var state: Binder<ModalState> {
+    Binder(base) { view, state in
+      view.state = state
+    }
+  }
+}
+
+// MARK: - State
+public struct ModalState: Equatable, Sendable {
+  var title: String
+  var description: String
+  var primaryTitle: String
+  var secondaryTitle: String
+  
+  public init(title: String, description: String, primaryTitle: String, secondaryTitle: String) {
+    self.title = title
+    self.description = description
+    self.primaryTitle = primaryTitle
+    self.secondaryTitle = secondaryTitle
+  }
+  
+  public static var empty: ModalState {
+    .init(title: "", description: "", primaryTitle: "", secondaryTitle: "")
+  }
+}
+
+// MARK: - Action
+public enum ModalAction {
+  case didTapPrimaryButton
+  case didTapSecondaryButton
 }

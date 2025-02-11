@@ -1,10 +1,3 @@
-//
-//  LabelRadio.swift
-//  UI
-//
-//  Created by Paratthakorn Sribunyong on 2/2/2568 BE.
-//
-
 import UIKit
 import SnapKit
 import RxSwift
@@ -12,29 +5,29 @@ import RxCocoa
 import Utils
 
 public class LabelRadio: UIView {
-  // MARK: - Reactive properties
+  // MARK: - Private Properties
   private let disposeBag = DisposeBag()
+  fileprivate let textRelay = BehaviorRelay<String>(value: "")
+  fileprivate let editingCompletedRelay = PublishRelay<Void>()
+  private var editingSubscription: Disposable?
   
   // MARK: - UI
   private let label = UILabel().apply {
-    $0.isHidden = false
     $0.textAlignment = .left
     $0.isUserInteractionEnabled = true
   }
   
   private let textField = UITextField().apply {
     $0.isHidden = true
-    $0.isEnabled = true
     $0.returnKeyType = .done
   }
   
-  private let radio = Radio()
+  fileprivate let radio = Radio()
   
-  // MARK: - Property observers
-  public var text: String = "" {
-    didSet {
-      label.text = text
-    }
+  // MARK: - Public Properties
+  public var text: String {
+    get { textRelay.value }
+    set { textRelay.accept(newValue) }
   }
   
   public var isSelected: Bool {
@@ -55,18 +48,14 @@ public class LabelRadio: UIView {
   }
   
   private func setupView() {
-    addSubviews(
-      radio,
-      label,
-      textField
-    )
+    addSubviews(radio, label, textField)
   }
   
   private func setupConstraint() {
     radio.snp.makeConstraints {
       $0.left.equalToSuperview()
-      $0.top.bottom.equalToSuperview()
-      $0.width.height.equalTo(24)
+      $0.centerY.equalToSuperview()
+      $0.size.equalTo(24)
     }
     
     label.snp.makeConstraints {
@@ -81,7 +70,6 @@ public class LabelRadio: UIView {
   }
   
   private func setupAction() {
-    // Add tap gesture to label
     let tapGesture = UITapGestureRecognizer()
     label.addGestureRecognizer(tapGesture)
     
@@ -91,16 +79,9 @@ public class LabelRadio: UIView {
       })
       .disposed(by: disposeBag)
     
-    // Handle text field events
-    textField.rx.controlEvent(.editingDidEndOnExit)
-      .subscribe(onNext: { [weak self] in
-        self?.switchToLabel()
-      })
-      .disposed(by: disposeBag)
-    
-    textField.rx.controlEvent(.editingDidEnd)
-      .subscribe(onNext: { [weak self] in
-        self?.switchToLabel()
+    textRelay
+      .subscribe(onNext: { [weak self] text in
+        self?.label.text = text
       })
       .disposed(by: disposeBag)
   }
@@ -108,18 +89,56 @@ public class LabelRadio: UIView {
   private func switchToTextField() {
     label.isHidden = true
     textField.isHidden = false
+    textField.text = text
     textField.becomeFirstResponder()
+    
+    // Clean up any existing subscription
+    editingSubscription?.dispose()
+    
+    // Create new subscription for this editing session
+    editingSubscription = textField.rx.controlEvent(.editingDidEndOnExit)
+      .take(1)
+      .subscribe(onNext: { [weak self] in
+        self?.handleEditingEnd()
+      })
+  }
+  
+  private func handleEditingEnd() {
+    editingSubscription?.dispose()
+    editingSubscription = nil
+    switchToLabel()
   }
   
   private func switchToLabel() {
-    text = textField.text ?? ""
+    let newText = textField.text ?? ""
     textField.isHidden = true
     label.isHidden = false
     textField.resignFirstResponder()
+    
+    // Only update text and trigger completion if text actually changed
+    if newText != text {
+      textRelay.accept(newText)
+      editingCompletedRelay.accept(())
+    }
   }
 }
 
 public extension Reactive where Base: LabelRadio {
+  @MainActor
+  var text: ControlProperty<String> {
+    .init(values: base.textRelay.asObservable(),
+          valueSink: Binder(base) { labelRadio, text in
+      labelRadio.text = text
+    })
+  }
   
+  @MainActor
+  var editingCompleted: ControlEvent<Void> {
+    .init(events: base.editingCompletedRelay.asObservable())
+  }
+  
+  @MainActor
+  var isSelected: ControlProperty<Bool> {
+    base.radio.rx.isSelected
+  }
 }
-
