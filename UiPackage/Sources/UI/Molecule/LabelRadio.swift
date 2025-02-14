@@ -9,17 +9,18 @@ public class LabelRadio: UIView {
   private let disposeBag = DisposeBag()
   fileprivate let textRelay = BehaviorRelay<String>(value: "")
   fileprivate let editingCompletedRelay = PublishRelay<Void>()
-  private var editingSubscription: Disposable?
   
   // MARK: - UI
-  private let label = UILabel().apply {
+  public let textView = UITextView().apply {
+    $0.font = .systemFont(ofSize: 17)
+    $0.textContainer.lineFragmentPadding = 0
+    $0.textContainerInset = .zero
+    $0.isScrollEnabled = false
+    $0.isEditable = true
+    $0.backgroundColor = .clear
+    $0.clipsToBounds = true
+    $0.sizeToFit()
     $0.textAlignment = .left
-    $0.isUserInteractionEnabled = true
-  }
-  
-  private let textField = UITextField().apply {
-    $0.isHidden = true
-    $0.returnKeyType = .done
   }
   
   fileprivate let radio = Radio()
@@ -48,78 +49,71 @@ public class LabelRadio: UIView {
   }
   
   private func setupView() {
-    addSubviews(radio, label, textField)
+    addSubviews(radio, textView)
   }
   
   private func setupConstraint() {
     radio.snp.makeConstraints {
       $0.left.equalToSuperview()
-      $0.centerY.equalToSuperview()
+      $0.top.equalToSuperview().offset(Spacing.xs)
       $0.size.equalTo(24)
     }
     
-    label.snp.makeConstraints {
+    textView.snp.makeConstraints {
       $0.left.equalTo(radio.snp.right).offset(Spacing.sm)
-      $0.top.bottom.right.equalToSuperview()
-    }
-    
-    textField.snp.makeConstraints {
-      $0.left.equalTo(radio.snp.right).offset(Spacing.sm)
-      $0.top.bottom.right.equalToSuperview()
+      $0.top.equalToSuperview().offset(Spacing.xs)
+      $0.bottom.right.equalToSuperview()
+      $0.height.greaterThanOrEqualTo(24)
     }
   }
   
   private func setupAction() {
-    let tapGesture = UITapGestureRecognizer()
-    label.addGestureRecognizer(tapGesture)
-    
-    tapGesture.rx.event
-      .subscribe(onNext: { [weak self] _ in
-        self?.switchToTextField()
-      })
-      .disposed(by: disposeBag)
+    textView.delegate = self
     
     textRelay
+      .observe(on: MainScheduler.instance)
       .subscribe(onNext: { [weak self] text in
-        self?.label.text = text
+        guard let self = self else { return }
+        if text != self.textView.text {
+          self.textView.text = text
+        }
       })
       .disposed(by: disposeBag)
-  }
-  
-  private func switchToTextField() {
-    label.isHidden = true
-    textField.isHidden = false
-    textField.text = text
-    textField.becomeFirstResponder()
     
-    // Clean up any existing subscription
-    editingSubscription?.dispose()
-    
-    // Create new subscription for this editing session
-    editingSubscription = textField.rx.controlEvent(.editingDidEndOnExit)
-      .take(1)
-      .subscribe(onNext: { [weak self] in
-        self?.handleEditingEnd()
+    textView.rx.text.orEmpty
+      .distinctUntilChanged()
+      .observe(on: MainScheduler.instance)
+      .subscribe(onNext: { [weak self] text in
+        guard let self = self else { return }
+        guard self.textRelay.value != text else { return }
+        self.textRelay.accept(text)
       })
-  }
-  
-  private func handleEditingEnd() {
-    editingSubscription?.dispose()
-    editingSubscription = nil
-    switchToLabel()
-  }
-  
-  private func switchToLabel() {
-    let newText = textField.text ?? ""
-    textField.isHidden = true
-    label.isHidden = false
-    textField.resignFirstResponder()
+      .disposed(by: disposeBag)
     
-    // Only update text and trigger completion if text actually changed
-    if newText != text {
-      textRelay.accept(newText)
-      editingCompletedRelay.accept(())
+    textView.rx.didEndEditing
+      .debug()
+      .subscribe(onNext: { [weak self] _ in
+      guard let self = self else { return }
+      self.editingCompletedRelay.accept(())
+    })
+    .disposed(by: disposeBag)
+  }
+}
+
+extension LabelRadio: UITextViewDelegate {
+  public func textViewDidChange(_ textView: UITextView) {
+    invalidateIntrinsicContentSize()
+  }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension LabelRadio: UIGestureRecognizerDelegate {
+  public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+    // Only handle taps outside the textView
+    if let view = touch.view, (view == textView || view.isDescendant(of: textView)) {
+      return false
     }
+    return true
   }
 }
 

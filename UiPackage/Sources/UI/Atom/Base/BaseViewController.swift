@@ -10,6 +10,7 @@ import RxSwift
 import RxCocoa
 import SnapKit
 
+@MainActor
 open class BaseViewController<VM: ViewModelType>: UIViewController {
   public var baseNavigationController: BaseNavigationController? {
     navigationController as? BaseNavigationController
@@ -19,6 +20,7 @@ open class BaseViewController<VM: ViewModelType>: UIViewController {
   
   public let disposeBag = DisposeBag()
   
+  @MainActor
   public init(viewModel: VM) {
     self.viewModel = viewModel
     super.init(nibName: nil, bundle: nil)
@@ -32,6 +34,7 @@ open class BaseViewController<VM: ViewModelType>: UIViewController {
   override open func viewDidLoad() {
     super.viewDidLoad()
     setupView()
+    hideKeyboardWhenTappedAround()
   }
   
   private func setupView() {

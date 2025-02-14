@@ -1,6 +1,15 @@
 {
-  "originHash" : "d0a5f6f06ff3684d80674ca28d749831b10bc09db5d881aa6450c52fc2228e16",
+  "originHash" : "a89625a46f1d1f78970a971ae88f3826054be5fc62369e9bc74eda782d2c9f41",
   "pins" : [
+    {
+      "identity" : "iqkeyboardmanager",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hackiftekhar/IQKeyboardManager.git",
+      "state" : {
+        "revision" : "c00b1ae9fa1ad8af4465bb6ca901f6943fc98eba",
+        "version" : "6.5.16"
+      }
+    },
     {
       "identity" : "rxswift",
       "kind" : "remoteSourceControl",

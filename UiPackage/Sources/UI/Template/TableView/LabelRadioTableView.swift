@@ -23,6 +23,8 @@ public class LabelRadioTableView: UIView {
     $0.separatorStyle = .none
     $0.isEditing = true
     $0.allowsSelectionDuringEditing = true
+    $0.rowHeight = UITableView.automaticDimension
+    $0.estimatedRowHeight = 60
   }
   
   // MARK: - Init
@@ -117,6 +119,20 @@ extension LabelRadioTableView: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 extension LabelRadioTableView: UITableViewDelegate {
+  public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    if let cell = tableView.cellForRow(at: indexPath) as? LabelRadioTableViewCell {
+      cell.focusTextView()
+    }
+  }
+  
+  public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    return UITableView.automaticDimension
+  }
+  
+  public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+    return 60
+  }
+  
   public func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
     return true
   }
@@ -125,8 +141,8 @@ extension LabelRadioTableView: UITableViewDelegate {
     var items = itemsRelay.value
     let item = items.remove(at: sourceIndexPath.row)
     items.insert(item, at: destinationIndexPath.row)
-    itemsRelay.accept(items)
     editingCompletedRelay.accept(items)
+    itemsRelay.accept(items)
   }
   
   public func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {

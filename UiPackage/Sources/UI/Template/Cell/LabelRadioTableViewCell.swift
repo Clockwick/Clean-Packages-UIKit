@@ -54,10 +54,15 @@ public class LabelRadioTableViewCell: UITableViewCell {
   }
   
   // MARK: - Configuration
+  @MainActor
   public func configure(with item: LabelRadioItem) {
     itemId = item.id
     labelRadio.text = item.text
     labelRadio.isSelected = item.isSelected
+  }
+  
+  public func focusTextView() {
+    labelRadio.textView.becomeFirstResponder()
   }
 }
 
