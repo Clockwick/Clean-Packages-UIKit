@@ -16,8 +16,6 @@ public class LabelRadioTableView: UIView {
   private let disposeBag = DisposeBag()
   fileprivate let itemsRelay = BehaviorRelay<[LabelRadioItem]>(value: [])
   fileprivate let editingCompletedRelay = PublishRelay<[LabelRadioItem]>()
-  private var longPressGesture: UILongPressGestureRecognizer?
-  private var snapshot: UIView?
   private var sourceIndexPath: IndexPath?
   
   // MARK: - UI Components
@@ -30,6 +28,8 @@ public class LabelRadioTableView: UIView {
     $0.estimatedRowHeight = 60
   }
   
+  private var snapshot: UIView?
+  
   // MARK: - Init
   public init() {
     super.init(frame: .zero)
@@ -37,7 +37,6 @@ public class LabelRadioTableView: UIView {
     setupConstraint()
     setupAction()
     setupLongPressGesture()
-    setupGestureRecognition()
   }
   
   required init?(coder: NSCoder) {
@@ -67,15 +66,11 @@ public class LabelRadioTableView: UIView {
   }
   
   private func setupLongPressGesture() {
-    longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-    longPressGesture?.minimumPressDuration = 0.5
-    longPressGesture?.shouldRequireFailure(of: UITapGestureRecognizer())
-    tableView.addGestureRecognizer(longPressGesture!)
-  }
-  
-  private func setupGestureRecognition() {
-    // Make the long press gesture work simultaneously with text input
-    longPressGesture?.delegate = self
+    var longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+    longPressGesture.minimumPressDuration = 0.5
+    longPressGesture.shouldRequireFailure(of: UITapGestureRecognizer())
+    tableView.addGestureRecognizer(longPressGesture)
+    longPressGesture.delegate = self
   }
   
   @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
