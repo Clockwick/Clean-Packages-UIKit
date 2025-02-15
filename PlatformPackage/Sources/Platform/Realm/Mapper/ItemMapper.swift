@@ -14,7 +14,7 @@ public struct ItemMapper {
     Item(
       id: realmItem.id,
       text: realmItem.text,
-      isSelected: realmItem.isSelected
+      isDone: realmItem.isDone
     )
   }
   
@@ -22,13 +22,13 @@ public struct ItemMapper {
     let realmItem = RealmItem()
     realmItem.id = item.id
     realmItem.text = item.text
-    realmItem.isSelected = item.isSelected
+    realmItem.isDone = item.isDone
     return realmItem
   }
   
   public static func updateRealmItem(_ realmItem: RealmItem, with item: Item) {
     realmItem.text = item.text
-    realmItem.isSelected = item.isSelected
+    realmItem.isDone = item.isDone
   }
 }
 

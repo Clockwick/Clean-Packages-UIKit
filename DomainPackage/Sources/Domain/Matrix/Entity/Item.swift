@@ -10,15 +10,19 @@ import Foundation
 public struct Item: Identifiable, Equatable {
   public let id: String
   public var text: String
-  public var isSelected: Bool
+  public var isDone: Bool
   
   public init(
     id: String = UUID().uuidString,
     text: String,
-    isSelected: Bool
+    isDone: Bool
   ) {
     self.id = id
     self.text = text
-    self.isSelected = isSelected
+    self.isDone = isDone
+  }
+  
+  public static var empty: Item {
+    .init(text: "", isDone: false)
   }
 }

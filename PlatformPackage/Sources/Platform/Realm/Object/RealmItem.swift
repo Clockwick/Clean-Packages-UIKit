@@ -12,16 +12,16 @@ import Domain
 public class RealmItem: Object {
   @Persisted(primaryKey: true) var id: String
   @Persisted var text: String
-  @Persisted var isSelected: Bool
+  @Persisted var isDone: Bool
   
   public convenience init(item: Item) {
     self.init()
     self.id = item.id
     self.text = item.text
-    self.isSelected = item.isSelected
+    self.isDone = item.isDone
   }
   
   public func toDomain() -> Item {
-    Item(id: id, text: text, isSelected: isSelected)
+    Item(id: id, text: text, isDone: isDone)
   }
 }
