@@ -3,7 +3,7 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
-public struct LabelRadioItem: Identifiable, Equatable, Sendable {
+public struct TextViewRadioItem: Identifiable, Equatable, Sendable {
   public let id: String
   public var text: String
   public var isSelected: Bool
@@ -19,11 +19,11 @@ public struct LabelRadioItem: Identifiable, Equatable, Sendable {
   }
 }
 
-public class LabelRadioTableViewCell: UITableViewCell {
+public class TextViewRadioTableViewCell: UITableViewCell {
   var disposeBag = DisposeBag()
   var itemId: String?
   // MARK: - UI
-  let labelRadio = LabelRadio()
+  let textViewRadio = TextViewRadio()
   
   // MARK: - Init
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -44,36 +44,36 @@ public class LabelRadioTableViewCell: UITableViewCell {
   }
   
   private func setupView() {
-    contentView.addSubview(labelRadio)
+    contentView.addSubview(textViewRadio)
   }
   
   private func setupConstraint() {
-    labelRadio.snp.makeConstraints {
+    textViewRadio.snp.makeConstraints {
       $0.edges.equalToSuperview().inset(UIEdgeInsets(top: Spacing.md, left: Spacing.lg, bottom: Spacing.md, right: Spacing.lg))
     }
   }
   
   // MARK: - Configuration
   @MainActor
-  public func configure(with item: LabelRadioItem) {
+  public func configure(with item: TextViewRadioItem) {
     itemId = item.id
-    labelRadio.text = item.text
-    labelRadio.isSelected = item.isSelected
+    textViewRadio.text = item.text
+    textViewRadio.isSelected = item.isSelected
   }
   
   public func focusTextView() {
-    labelRadio.textView.becomeFirstResponder()
+    textViewRadio.textView.becomeFirstResponder()
   }
 }
 
-public extension Reactive where Base: LabelRadioTableViewCell {
+public extension Reactive where Base: TextViewRadioTableViewCell {
   @MainActor
   var textEditCompleted: ControlEvent<Void> {
-    base.labelRadio.rx.editingCompleted
+    base.textViewRadio.rx.editingCompleted
   }
   
   @MainActor
   var selectionChanged: ControlEvent<Bool> {
-    .init(events: base.labelRadio.rx.isSelected.asObservable())
+    .init(events: base.textViewRadio.rx.isSelected.asObservable())
   }
 }

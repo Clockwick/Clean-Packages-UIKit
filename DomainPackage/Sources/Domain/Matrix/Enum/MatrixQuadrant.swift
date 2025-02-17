@@ -12,4 +12,17 @@ public enum MatrixQuadrant {
   case importantNonUrgent
   case nonImportantUrgent
   case nonImportantNonUrgent
+  
+  public var title: String {
+    switch self {
+    case .importantUrgent:
+      return "Important & Urgent"
+    case .importantNonUrgent:
+      return "Important & Non-Urgent"
+    case .nonImportantUrgent:
+      return "Non-Important & Urgent"
+    case .nonImportantNonUrgent:
+      return "Non-Important & Non-Urgent"
+    }
+  }
 }

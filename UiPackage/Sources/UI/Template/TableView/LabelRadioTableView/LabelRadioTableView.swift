@@ -1,5 +1,5 @@
 //
-//  LabelRadioTableView.swift
+//  TextViewRadioTableView.swift
 //  UI
 //
 //  Created by Paratthakorn Sribunyong on 10/2/2568 BE.
@@ -11,16 +11,16 @@ import RxCocoa
 import RxRelay
 import Utils
 
-public class LabelRadioTableView: UIView {
+public class TextViewRadioTableView: UIView {
   // MARK: - Private Properties
   private let disposeBag = DisposeBag()
-  fileprivate let itemsRelay = BehaviorRelay<[LabelRadioItem]>(value: [])
-  fileprivate let editingCompletedRelay = PublishRelay<[LabelRadioItem]>()
+  fileprivate let itemsRelay = BehaviorRelay<[TextViewRadioItem]>(value: [])
+  fileprivate let editingCompletedRelay = PublishRelay<[TextViewRadioItem]>()
   private var sourceIndexPath: IndexPath?
   
   // MARK: - UI Components
   private let tableView = UITableView().apply {
-    $0.register(LabelRadioTableViewCell.self, forCellReuseIdentifier: LabelRadioTableViewCell.reuseID)
+    $0.register(TextViewRadioTableViewCell.self, forCellReuseIdentifier: TextViewRadioTableViewCell.reuseID)
     $0.showsVerticalScrollIndicator = false
     $0.separatorStyle = .none
     $0.allowsSelection = true
@@ -162,7 +162,7 @@ public class LabelRadioTableView: UIView {
     }
   }
   
-  private func updateItemById(_ id: String, transform: (inout LabelRadioItem) -> Void) {
+  private func updateItemById(_ id: String, transform: (inout TextViewRadioItem) -> Void) {
     var items = itemsRelay.value
     guard let index = items.firstIndex(where: { $0.id == id }) else { return }
     
@@ -177,13 +177,13 @@ public class LabelRadioTableView: UIView {
 }
 
 // MARK: - UITableViewDataSource & Delegate implementations
-extension LabelRadioTableView: UITableViewDataSource, UITableViewDelegate {
+extension TextViewRadioTableView: UITableViewDataSource, UITableViewDelegate {
   public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     return itemsRelay.value.count
   }
   
   public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    guard let cell = tableView.dequeueReusableCell(withIdentifier: LabelRadioTableViewCell.reuseID, for: indexPath) as? LabelRadioTableViewCell else {
+    guard let cell = tableView.dequeueReusableCell(withIdentifier: TextViewRadioTableViewCell.reuseID, for: indexPath) as? TextViewRadioTableViewCell else {
       return UITableViewCell()
     }
     
@@ -197,7 +197,7 @@ extension LabelRadioTableView: UITableViewDataSource, UITableViewDelegate {
               let cell = cell,
               let itemId = cell.itemId else { return }
         
-        self.updateItemById(itemId) { $0.text = cell.labelRadio.text }
+        self.updateItemById(itemId) { $0.text = cell.textViewRadio.text }
       })
       .disposed(by: cell.disposeBag)
     
@@ -231,7 +231,7 @@ extension LabelRadioTableView: UITableViewDataSource, UITableViewDelegate {
   }
 }
 
-extension LabelRadioTableView: UIGestureRecognizerDelegate {
+extension TextViewRadioTableView: UIGestureRecognizerDelegate {
   public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
     // Allow simultaneous recognition with text input gestures
     return true
@@ -239,21 +239,21 @@ extension LabelRadioTableView: UIGestureRecognizerDelegate {
 }
 
 // MARK: - Reactive Extension
-public extension Reactive where Base: LabelRadioTableView {
+public extension Reactive where Base: TextViewRadioTableView {
   @MainActor
-  var items: Binder<[LabelRadioItem]> {
+  var items: Binder<[TextViewRadioItem]> {
     Binder(base) { view, items in
       view.itemsRelay.accept(items)
     }
   }
   
   @MainActor
-  var itemsStream: Observable<[LabelRadioItem]> {
+  var itemsStream: Observable<[TextViewRadioItem]> {
     base.itemsRelay.asObservable()
   }
   
   @MainActor
-  var editingCompleted: Observable<[LabelRadioItem]> {
+  var editingCompleted: Observable<[TextViewRadioItem]> {
     base.editingCompletedRelay.asObservable()
   }
   
