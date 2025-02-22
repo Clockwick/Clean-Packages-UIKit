@@ -20,7 +20,6 @@ open class BaseViewController<VM: ViewModelType>: UIViewController {
   
   public let disposeBag = DisposeBag()
   
-  @MainActor
   public init(viewModel: VM) {
     self.viewModel = viewModel
     super.init(nibName: nil, bundle: nil)

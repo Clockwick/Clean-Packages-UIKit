@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Item: Identifiable, Equatable {
+public struct Item: Identifiable, Equatable, Sendable {
   public let id: String
   public var text: String
   public var isDone: Bool
